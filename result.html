@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scraped Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Scraped Data</h1>
+    <h2>Class Name: {{ data.class_name }}</h2>
+    <h3>Student List:</h3>
+    <ul>
+        {% for student in data.student_list %}
+        <li>{{ student }}</li>
+        {% endfor %}
+    </ul>
+    <h3>Homework Due So Far:</h3>
+    <ul>
+        {% for hw in data.homework_names %}
+        <li>{{ hw }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<h1>Welcome, {{ session.username }}</h1>
+
+{% if data %}
+<h2>Stored Information:</h2>
+
+<p>Class Name: {{ data.class_name }}</p>
+
+<p>Student List:</p>
+<ul>
+{% for student in data.student_list %}
+    <li>{{ student }}</li>
+{% endfor %}
+</ul>
+
+<p>Homework Names:</p>
+<ul>
+{% for homework in data.homework_names %}
+    <li>{{ homework }}</li>
+{% endfor %}
+</ul>
+
+{% else %}
+<p>No stored information available.</p>
+{% endif %}
+
+<p>Enter Class Name:</p>
+<form action="{{ url_for('menu') }}" method="post">
+    <input type="text" name="class_name" required>
+    <input type="submit" value="Scrape Data">
+</form>
+
+<a href="{{ url_for('logout') }}">Logout</a>
