@@ -27,6 +27,7 @@ def scrape_data(username, password, class_input):
     
     # Get homework names
     hwNames = curr_hws(driver)
+    currTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     driver.quit()
 
@@ -34,7 +35,8 @@ def scrape_data(username, password, class_input):
     return {
         'class_name': class_input,
         'student_list': student_list,
-        'homework_names': hwNames
+        'homework_names': hwNames,
+        'last_scraped': currTime
     }
 
 def goHome(driver):
