@@ -72,7 +72,7 @@ def get_scraped_data(username):
             'class_name': data[1],
             'student_list': json.loads(data[2]) if data[2] else [],
             'homework_names': json.loads(data[3]) if data[3] else [],
-            'last_scraped': data[4] if len(data) > 4 and data[4] else None
+            'last_scraped': data[4] if data[4] else None
         }
     else:
         return None

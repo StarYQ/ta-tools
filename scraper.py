@@ -8,30 +8,54 @@ import time
 import re
 from datetime import datetime
 
-def scrape_data(username, password, class_input):
+def scrape_hws(username, password, class_input):
     # Set options to run in headless mode
     options = Options()
     options.headless = True
-
     # Set up webdriver
     driver = webdriver.Chrome(options=options)
     goHome(driver)
+    # Login
+    login(driver, username, password)
+    print('Loading...')
+    go_to_class(driver, class_input)
+    hwNames = curr_hws(driver)
+    driver.quit()
+    return hwNames
 
+def scrape_data(username, password, class_input, scraped_hws, hw_input):
+    # Set options to run in headless mode
+    options = Options()
+    options.headless = True
+    # Set up webdriver
+    driver = webdriver.Chrome(options=options)
+    goHome(driver)
     # Login
     login(driver, username, password)
     print("Loading...")
-
     # Go to class and store student list
     class_name = go_to_class(driver, class_input)
-    student_list = store_student_list(driver)
-    
+    students_dict={
+        'Verbal HW 8': ['Name 1', 'Name 2', 'Name 3'],
+        'Math HW 8': ['Name 1', 'Name 2', 'Name 3', 'Name 2', 'Name 3', 'Name 2', 'Name 3', 'Name 2', 'Name 3'],
+        'Math HW 9': ['Name 1', 'Name 2', 'Name 3'],
+        'Math HW 10': ['Name 1', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3']
+    }
+    input_hws = hw_input.split("-")
+    student_list = {}
+    if len(input_hws)==2:
+        startIndex = scraped_hws.index(input_hws[0])
+        endIndex = scraped_hws.index(input_hws[1])
+        for i in range(startIndex, endIndex+1):
+            currHW = scraped_hws[i]
+            student_list[currHW] = students_dict[currHW]
+    else:
+        student_list[input_hws[0]] = students_dict[input_hws[0]]
     # Get homework names
-    hwNames = curr_hws(driver)
+    hwNames = scraped_hws
+    #^MAP THE HWS
     currTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     driver.quit()
-
-    # Return the scraped data
     return {
         'class_name': class_input,
         'student_list': student_list,
@@ -98,7 +122,7 @@ def store_student_list(driver):
     try:
         wait_for_element(driver, "//a[contains(text(), 'Attendance')]").click()
         wait_for_element(driver, "//a[contains(text(), 'Months')]").click()
-        wait_for_element(driver, "//table[@class='generaltable']/tbody/tr/td[contains(@class, 'lastcol')]/a[@class='action-icon']/img[@alt='Change attendance']/..").click()
+        wait_for_element(driver, "(//img[contains(@alt, 'Change attendance')])[position()=1]").click()
         student_table = wait_for_element(driver, "//table[@class='generaltable takelist']")
         soup = BeautifulSoup(student_table.get_attribute('outerHTML'), 'html.parser')
         student_list = [a.text for a in soup.select('tbody tr:not(:first-child) td:first-child a:nth-of-type(2)')]

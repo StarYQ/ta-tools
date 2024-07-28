@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>Results</title>
+    <title>HW Menu</title>
     <style>
         body {
             display: flex;
@@ -38,22 +38,22 @@
     </style>
 </head>
 <body>
-    <h1>Results for Class: {{ data.class_name }}</h1>
+    <h1>Welcome, {{ session.username }}</h1>
 
-    <div class="container">
-        <div class="column homework-column">
-        </div>
-        {% for homework, students in data.student_list.items() %}
-        <div class="column">
-            <p><strong>{{ homework }}:</strong></p>
-            <ul>
-            {% for student in students %}
-                <li>{{ student }}</li>
-            {% endfor %}
-            </ul>
-        </div>
+    <div class="column homework-column">
+        <p><strong><u>(Current)<br>Homework Due So Far:</u></strong></p>
+        <ul>
+        {% for hw in scraped_hws %}
+            <li>{{ hw }}</li>
         {% endfor %}
+        </ul>
+        <p>Enter HW Name(s):</p>
+        <form action="{{ url_for('hwMenu') }}" method="post">
+            <input type="text" name="hw_input" required>
+            <input type="submit" value="Scrape Data">
+        </form>
     </div>
+
     <a href="{{ url_for('logout') }}">Logout</a>
 </body>
 </html>
