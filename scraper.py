@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import requests
 import time
 import re
 from datetime import datetime
@@ -23,46 +24,82 @@ def scrape_hws(username, password, class_input):
     driver.quit()
     return hwNames
 
-def scrape_data(username, password, class_input, scraped_hws, hw_input):
+def scrape_data(username, password, class_input, hw_names, hw_input):
     # Set options to run in headless mode
     options = Options()
     options.headless = True
     # Set up webdriver
-    driver = webdriver.Chrome(options=options)
-    goHome(driver)
-    # Login
-    login(driver, username, password)
-    print("Loading...")
-    # Go to class and store student list
-    class_name = go_to_class(driver, class_input)
-    students_dict={
-        'Verbal HW 8': ['Name 1', 'Name 2', 'Name 3'],
-        'Math HW 8': ['Name 1', 'Name 2', 'Name 3', 'Name 2', 'Name 3', 'Name 2', 'Name 3', 'Name 2', 'Name 3'],
-        'Math HW 9': ['Name 1', 'Name 2', 'Name 3'],
-        'Math HW 10': ['Name 1', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3', 'Name 3', 'Name 2', 'Name 3']
-    }
-    input_hws = hw_input.split("-")
-    student_list = {}
-    if len(input_hws)==2:
-        startIndex = scraped_hws.index(input_hws[0])
-        endIndex = scraped_hws.index(input_hws[1])
-        for i in range(startIndex, endIndex+1):
-            currHW = scraped_hws[i]
-            student_list[currHW] = students_dict[currHW]
-    else:
-        student_list[input_hws[0]] = students_dict[input_hws[0]]
-    # Get homework names
-    hwNames = scraped_hws
-    #^MAP THE HWS
-    currTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    driver.quit()
+    with webdriver.Chrome(options=options) as driver:
+        goHome(driver)
+        # Login
+        login(driver, username, password)
+        print("Loading...")
+        # Go to class and store student list
+        go_to_class(driver, class_input)
+        attendance_student_list = store_student_list(driver)
+        input_hws = hw_input.split("-")
+        input_hw_list = []
+        if len(input_hws)==2:
+            startIndex = hw_names.index(input_hws[0])
+            endIndex = hw_names.index(input_hws[1])
+            for i in range(startIndex, endIndex+1):
+                input_hw_list.append(hw_names[i])
+        else:
+            input_hw_list.append(input_hws[0])  
+        students_dict = compile_student_lists(driver, input_hw_list, attendance_student_list)
+        currTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        driver.quit()
     return {
         'class_name': class_input,
-        'student_list': student_list,
-        'homework_names': hwNames,
+        'student_list': students_dict,
+        'homework_names': hw_names,
         'last_scraped': currTime
     }
 
+def compile_student_lists(driver, hw_names, student_list):
+    compiled_lists = {}
+    for hw_name in hw_names:
+        hw_link = driver.find_element(By.XPATH, f'//a[contains(text(), "{hw_name} ")]') # Space after hw_name to ensure the name matches exactly
+        hw_link.click()
+        driver.find_element(By.XPATH, "//a[contains(text(), 'Results') and contains(@role, 'menuitem')]").click()
+        submission_list = low_grade_names(driver, hw_name, compiled_lists)
+        try:
+            for student in student_list:
+                if student not in submission_list:
+                    if student not in compiled_lists:
+                        compiled_lists[student] = {}
+                    if "Missing hws" not in compiled_lists[student]:
+                        compiled_lists[student]['Missing hws'] = []
+                    compiled_lists[student]['Missing hws'].append(hw_name)
+        except Exception as e:
+            print(f"Error processing homework  '{hw_name}': {e}")
+    return compiled_lists
+
+def low_grade_names(driver, hw_name, student_dict):
+    max_score_a = driver.find_element(By.XPATH, '//th[contains(@class, "c7 bold")]/a')
+    max_score = max_score_a.text.split('Grade/')[1].split()[0]
+    all_attempts = driver.find_elements(By.XPATH, '//tr[contains(@class, "gradedattempt")]')
+    students_with_submissions = []
+    for attempt in all_attempts:
+        name_el = attempt.find_element(By.XPATH, './/td[contains(@class, "cell c2 bold")]/a[position()=1]')
+        name = name_el.text
+        students_with_submissions.append(name)
+        score_el = attempt.find_element(By.XPATH, './/td[contains(@class, "cell c7 bold")]')
+        score = score_el.text
+        if '/' in score:
+            score = score.split('/')[1].split()[0]
+        score = (float(score)/float(max_score))
+        if score == 0:
+            students_with_submissions.remove(name)
+        elif score<0.5 and score!=0.00:
+            if name not in student_dict:
+                student_dict[name] = {}
+            if "Low grade hws" not in student_dict[name]:
+                student_dict[name]["Low grade hws"] = []
+            student_dict[name]['Low grade hws'].append(hw_name + ": " + str(round(score, 2)*100)+"%")
+    return students_with_submissions
+    
+    
 def goHome(driver):
     driver.get('https://class.abcmath.com/class/my/')
 

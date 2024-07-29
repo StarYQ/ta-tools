@@ -15,14 +15,17 @@
         }
         .container {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
             align-items: flex-start;
             width: 90%;
             margin: 20px 0;
         }
         .column {
-            margin: 0 20px;
+            margin: 20px;
             text-align: left;
+            flex: 1;
+            min-width: 250px;
         }
         .homework-column {
             margin-right: 50px; /* Adds space between the columns */
@@ -34,6 +37,9 @@
         form {
             margin-top: 20px;
             text-align: left;
+            padding: 20px; 
+            border: 1px solid #ccc; 
+            border-radius: 10px; 
         }
     </style>
 </head>
@@ -62,16 +68,25 @@
             {% endfor %}
             </ul>
         </div>
-        {% for homework, students in data.student_list.items() %}
-        <div class="column">
-            <p><strong>{{ homework }}:</strong></p>
-            <ul>
-            {% for student in students %}
-                <li>{{ student }}</li>
-            {% endfor %}
-            </ul>
-        </div>
-        {% endfor %}
+    {% for student, dict in data.student_list.items() %}
+    <div class="column">
+        <p><strong>{{ student }}:</strong></p>
+        <ul>
+            {% if 'Low grade hws' in dict and dict['Low grade hws'] %}
+                <li><strong>Low grade homeworks:</strong></li>
+                {% for hw in dict['Low grade hws'] %}
+                    <li>{{ hw }}</li>
+                {% endfor %}
+            {% endif %}
+            {% if 'Missing hws' in dict and dict['Missing hws'] %}
+                <li><strong>Missing homeworks:</strong></li>
+                {% for hw in dict['Missing hws'] %}
+                    <li>{{ hw }}</li>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+    {% endfor %}
     </div>
 
     {% else %}
