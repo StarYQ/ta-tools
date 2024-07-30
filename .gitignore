@@ -120,3 +120,4 @@ cython_debug/
 
 # WebDriver binaries
 drivers/
+.vercel
