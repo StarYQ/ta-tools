@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Results</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        table {
+            width: 90%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #print-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #output-container {
+            width: 90%;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        #copy-button {
+            align-self: flex-start;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #output {
+            white-space: pre-wrap;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Results for Class: {{ data.class_name }}</h1>
+    <h2>HWs: {{ session.hw_input }}</h2>
+    <button id="print-button">Get Message</button>
+    <div id="output-container" style="display: none;">
+        <button id="copy-button">Copy</button>
+        <div id="output"></div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Missing HWs</th>
+                <th>Low Grade HWs</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student, dict in data.student_list.items() %}
+            <tr>
+                <td>{{ student }}</td>
+                <td>
+                    {% if 'Missing hws' in dict and dict['Missing hws'] %}
+                        <ul>
+                            {% for hw in dict['Missing hws'] %}
+                                <li>{{ hw }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if 'Low grade hws' in dict and dict['Low grade hws'] %}
+                        <ul>
+                            {% for hw in dict['Low grade hws'] %}
+                                <li>{{ hw }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('logout') }}">Logout</a>
+    <script>
+        document.getElementById('print-button').addEventListener('click', function() {
+            fetch('{{ url_for("print_data") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('output').textContent = data.message;
+                    document.getElementById('output-container').style.display = 'block';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+        document.getElementById('copy-button').addEventListener('click', function() {
+            const outputText = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(outputText).then(function() {
+                alert('Copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+    </script>
+</body>
+</html>

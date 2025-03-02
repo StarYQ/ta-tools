@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Class Menu</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .container {
+            width: 90%;
+            margin: 20px 0;
+        }
+        .form-container, .results-container {
+            margin: 20px 0;
+            text-align: left;
+            width: 100%;
+        }
+        form {
+            margin-top: 20px;
+            text-align: left;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        .collapsible {
+            background-color: #f1f1f1;
+            color: #444;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+        .active, .collapsible:hover {
+            background-color: #ddd;
+        }
+        .content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #f9f9f9;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #print-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #output-container {
+            width: 90%;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        #copy-button {
+            align-self: flex-start;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #output {
+            white-space: pre-wrap;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ session.username }}</h1>
+    <button id="print-button">Get Message</button>
+    <div id="output-container" style="display: none;">
+        <button id="copy-button">Copy</button>
+        <div id="output"></div>
+    </div>
+    {% if data %}
+    <div class="container">
+        <div class="form-container">
+            <h2>Stored Information:</h2>
+            <p>Last update: {{ data.last_scraped }}</p>
+            <p>Class Name: {{ data.class_name }}</p>
+            <p>Enter Class Name:</p>
+            <form action="{{ url_for('classMenu') }}" method="post">
+                <input type="text" name="class_name" required>
+                <input type="submit" value="Go to Options">
+            </form>
+        </div>
+
+        <div class="form-container">
+            <h3>(Previously Recorded) Homework Due So Far:</h3>
+            <ul>
+                {% for homework in data.homework_names %}
+                    <li>{{ homework }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <button type="button" class="collapsible">Show/Hide Results</button>
+        <div class="content">
+            <div class="results-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Missing hws</th>
+                            <th>Low grade hws</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student, dict in data.student_list.items() %}
+                            <tr>
+                                <td>{{ student }}</td>
+                                <td>
+                                    {% if 'Missing hws' in dict and dict['Missing hws'] %}
+                                        <ul>
+                                            {% for hw in dict['Missing hws'] %}
+                                                <li>{{ hw }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if 'Low grade hws' in dict and dict['Low grade hws'] %}
+                                        <ul>
+                                            {% for hw in dict['Low grade hws'] %}
+                                                <li>{{ hw }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p>No stored information available.</p>
+    <div class="form-container">
+        <p>Enter Class Name:</p>
+        <form action="{{ url_for('classMenu') }}" method="post">
+            <input type="text" name="class_name" required>
+            <input type="submit" value="Go to Options">
+        </form>
+    </div>
+    {% endif %}
+    <a href="{{ url_for('logout') }}">Logout</a>
+    <script>
+        document.getElementById('print-button').addEventListener('click', function() {
+            fetch('{{ url_for("print_data") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('output').textContent = data.message;
+                    document.getElementById('output-container').style.display = 'block';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+        document.getElementById('copy-button').addEventListener('click', function() {
+            const outputText = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(outputText).then(function() {
+                alert('Copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+    </script>
+</body>
+</html>

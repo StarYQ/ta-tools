@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Post Homework</title>
+</head>
+<body>
+    <h1>Post Homework</h1>
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+    <form action="{{ url_for('postHW') }}" method="post">
+        <label for="class_type">Class Type:</label>
+        <input type="text" id="class_type" name="class_type" required><br>
+        <label for="hw_description">Post Template:</label>
+        <textarea id="hw_description" name="hw_description" required></textarea><br>
+        <input type="submit" value="Submit">
+    </form>
+    <a href="{{ url_for('optionsMenu') }}">Back to Options Menu</a>
+</body>
+</html>

@@ -6,28 +6,7 @@ def create_connection():
     conn = sqlite3.connect('database.db')
     return conn
 
-def create_tables():
-    conn = create_connection()
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                 username TEXT NOT NULL,
-                 password TEXT NOT NULL)''')
-
-    # Drop and recreate scraped_data table to ensure schema is correct
-    c.execute('DROP TABLE IF EXISTS scraped_data')
-    c.execute('''
-    CREATE TABLE scraped_data (
-        username TEXT PRIMARY KEY,
-        class_name TEXT,
-        student_list TEXT,
-        homework_names TEXT,
-        last_scraped TEXT
-    )
-    ''')
-
-    conn.commit()
-    conn.close()
+# Remove the create_tables function from here
 
 def insert_user(username, password):
     conn = create_connection()
@@ -64,9 +43,6 @@ def get_scraped_data(username):
     c.execute("SELECT * FROM scraped_data WHERE username = ?", (username,))
     data = c.fetchone()
     conn.close()
-    
-    print(data)  # Debugging line to print the fetched data
-    
     if data:
         return {
             'class_name': data[1],
@@ -76,3 +52,20 @@ def get_scraped_data(username):
         }
     else:
         return None
+
+def store_meetings(meetings):
+    conn = create_connection()
+    c = conn.cursor()
+    for meeting in meetings:
+        c.execute("INSERT INTO meetings (title, start, end) VALUES (?, ?, ?)",
+                  (meeting['title'], meeting['start'], meeting['end']))
+    conn.commit()
+    conn.close()
+
+def get_meetings():
+    conn = create_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM meetings")
+    meetings = [{'title': row[1], 'start': row[2], 'end': row[3]} for row in c.fetchall()]
+    conn.close()
+    return meetings

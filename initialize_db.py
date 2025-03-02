@@ -4,8 +4,8 @@ def initialize_db():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    cursor.execute('DROP TABLE IF EXISTS scraped_data')  # Drop the table if it exists
-
+    #existing tables
+    cursor.execute('DROP TABLE IF EXISTS scraped_data')
     cursor.execute('''
     CREATE TABLE scraped_data (
         username TEXT PRIMARY KEY,
@@ -13,6 +13,17 @@ def initialize_db():
         student_list TEXT,
         homework_names TEXT,
         last_scraped TEXT
+    )
+    ''')
+
+    #new meetings table
+    cursor.execute('DROP TABLE IF EXISTS meetings')
+    cursor.execute('''
+    CREATE TABLE meetings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        start TEXT,
+        end TEXT
     )
     ''')
 

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TA Tools - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- <h1>Welcome to TA Tools!</h1> -->
+        <h1>Welcome!</h1>
+        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+        <div id="calendar"></div>
+    </div>
+    <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+    <script>
+        const calendar = new Calendar(document.getElementById('calendar'));
+        calendar.init();
+    </script>
+</body>
+</html>

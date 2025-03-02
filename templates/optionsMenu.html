@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Options Menu</title>
+</head>
+<body>
+    <h1>Options Menu</h1>
+    <ul>
+        <li><a href="{{ url_for('postHW') }}">Post Homework</a></li>
+        <li><a href="{{ url_for('hwMenu') }}">Generate List of Students Staying</a></li>
+    </ul>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>
